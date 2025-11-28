@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Session ouverte</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+body { background:#f3f4f6; font-family:Arial; padding:30px; }
+.container {
+    max-width:650px; margin:auto; background:white; padding:25px;
+    border-radius:12px; box-shadow:0 3px 8px rgba(0,0,0,0.1);
+}
+.student-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px; background:#f9fafb; border-radius:8px; margin-bottom:10px;
+}
+button { margin-left:5px; padding:8px 12px; border:none; border-radius:6px; cursor:pointer; color:white; }
+.present { background:#16a34a; }
+.absent { background:#dc2626; }
+.late { background:#f59e0b; }
+
+#btnClose {
+    width:100%; padding:12px; margin-top:20px; background:#2563eb;
+    color:white; border:none; border-radius:8px; cursor:pointer;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+    <h2>Session en cours</h2>
+
+    <div id="studentsList">Chargement...</div>
+
+    <button id="btnClose">Clôturer la session</button>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const sessionId = params.get("session_id");
+
+function loadStudents() {
+    $.get("../../../backend/api/professor/getSessionStudents.php?session_id=" + sessionId, function(res){
+        if (!res.success) return alert(res.message);
+
+        let html = "";
+        res.data.forEach(st => {
+            html += `
+                <div class="student-row">
+                    <strong>${st.first_name} ${st.last_name}</strong>
+                    <div>
+                        <button class="present" onclick="mark(${st.id}, 'present')">Présent</button>
+                        <button class="absent" onclick="mark(${st.id}, 'absent')">Absent</button>
+                        <button class="late" onclick="mark(${st.id}, 'late')">En retard</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        $("#studentsList").html(html);
+    });
+}
+
+loadStudents();
+
+function mark(studentId, status) {
+    $.ajax({
+        url: "../../../backend/api/professor/updateAttendance.php",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            session_id: sessionId,
+            student_id: studentId,
+            status: status
+        })
+    });
+}
+
+$("#btnClose").click(() => {
+    $.post("../../../backend/api/professor/closeSession.php",
+    { session_id: sessionId },
+    function(res){
+        alert("Session clôturée !");
+        window.location.href = "teacher_home.html";
+    },
+    "json");
+});
+</script>
+
+</body>
+</html>

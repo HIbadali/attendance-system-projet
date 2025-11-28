@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des professeurs — Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Icônes Google -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            background: #111827;
+            color: #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .brand { font-size: 20px; font-weight: bold; margin-bottom: 30px; }
+        .brand span { color: #3b82f6; }
+
+        .menu { flex: 1; }
+        .menu-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .menu-item a {
+            color: inherit;
+            text-decoration: none;
+            display: block;
+        }
+        .menu-item.active,
+        .menu-item:hover { background: #1f2937; }
+
+        .sidebar-footer {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* MAIN */
+        .main {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar-title {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        /* ACTIONS + TABLE */
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .search-input {
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            width: 260px;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .btn-primary span { margin-left: 6px; }
+
+        table {
+            width: 100%;
+            margin-top: 16px;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+        }
+
+        th, td {
+            padding: 12px;
+            font-size: 14px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        tr:hover { background: #f3f4f6; }
+
+        .actions-btns button {
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        .material-icons {
+            font-size: 20px;
+            vertical-align: middle;
+        }
+
+        .edit { color: #2563eb; }
+        .delete { color: #dc2626; }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(4px);
+            background: rgba(0,0,0,0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background: white;
+            width: 420px;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: fadeIn .3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal h2 {
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            color: #4b5563;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .btn-cancel {
+            background: #e5e7eb;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            background: #2563eb;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+
+        @media (max-width: 900px) {
+            .layout { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                align-items: center;
+                gap: 16px;
+            }
+            .menu {
+                display: flex;
+                gap: 8px;
+            }
+            .menu-item { margin-bottom: 0; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="brand">Attendance<span>Admin</span></div>
+
+        <div class="menu">
+            <div class="menu-item"><a href="admin_home.html">Dashboard</a></div>
+            <div class="menu-item"><a href="admin_students.html">Étudiants</a></div>
+            <div class="menu-item active"><a href="admin_professors.html">Professeurs</a></div>
+            <div class="menu-item"><a href="admin_courses.html">Cours</a></div>
+            <div class="menu-item"><a href="admin_groups.html">Groupes</a></div>
+        </div>
+
+        <div class="sidebar-footer">
+            INF101 — Système de présence
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <div class="topbar">
+            <div class="topbar-title">Gestion des professeurs</div>
+        </div>
+
+        <div class="actions">
+            <input type="text" class="search-input" id="search" placeholder="Rechercher un professeur...">
+
+            <button class="btn-primary" id="btnAdd">
+                <span class="material-icons">add</span>
+                <span>Nouveau professeur</span>
+            </button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom complet</th>
+                    <th>Email</th>
+                    <th>Cours assignés</th>
+                    <th style="width: 100px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="professorsTable">
+                <!-- Rempli en AJAX -->
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h2 id="modalTitle">Ajouter un professeur</h2>
+
+        <div class="form-group">
+            <label>Prénom</label>
+            <input type="text" id="firstName">
+        </div>
+
+        <div class="form-group">
+            <label>Nom</label>
+            <input type="text" id="lastName">
+        </div>
+
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="email">
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" id="btnCancel">Annuler</button>
+            <button class="btn-save" id="btnSave">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let editingId = null;
+
+// CHARGER LES PROFESSEURS
+function loadProfessors() {
+    $.get("../../../backend/api/admin/getProfessors.php", function(response) {
+        if (!response.success) {
+            console.log(response.message);
+            return;
+        }
+
+        let html = "";
+
+        response.data.forEach(p => {
+            html += `
+            <tr>
+                <td>${p.id}</td>
+                <td>${p.first_name} ${p.last_name}</td>
+                <td>${p.email}</td>
+                <td>${p.course_count ?? 0}</td>
+                <td class="actions-btns">
+                    <button onclick="editProfessor(${p.id}, '${p.first_name}', '${p.last_name}', '${p.email}')">
+                        <span class="material-icons edit">edit</span>
+                    </button>
+                    <button onclick="deleteProfessor(${p.id})">
+                        <span class="material-icons delete">delete</span>
+                    </button>
+                </td>
+            </tr>`;
+        });
+
+        $("#professorsTable").html(html);
+    });
+}
+
+// MODAL
+function openModal(title) {
+    $("#modalTitle").text(title);
+    $("#modalOverlay").fadeIn(150);
+}
+
+function closeModal() {
+    $("#modalOverlay").fadeOut(150);
+}
+
+$("#btnAdd").click(() => {
+    editingId = null;
+    $("#firstName").val("");
+    $("#lastName").val("");
+    $("#email").val("");
+    openModal("Ajouter un professeur");
+});
+
+$("#btnCancel").click(closeModal);
+
+// EDIT
+function editProfessor(id, first, last, email) {
+    editingId = id;
+    $("#firstName").val(first);
+    $("#lastName").val(last);
+    $("#email").val(email);
+    openModal("Modifier le professeur");
+}
+
+// SAVE
+$("#btnSave").click(() => {
+    const data = {
+        first_name: $("#firstName").val(),
+        last_name: $("#lastName").val(),
+        email: $("#email").val(),
+        id: editingId
+    };
+
+    const url = editingId
+        ? "../../../backend/api/admin/editProfessor.php"
+        : "../../../backend/api/admin/addProfessor.php";
+
+    $.ajax({
+        url: url,
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify(data),
+        success: function(response) {
+            if (!response.success) {
+                alert(response.message);
+                return;
+            }
+            closeModal();
+            loadProfessors();
+        }
+    });
+});
+
+// DELETE
+function deleteProfessor(id) {
+    if (!confirm("Supprimer ce professeur ?")) return;
+
+    $.ajax({
+        url: "../../../backend/api/admin/deleteProfessor.php",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ id }),
+        success: function(response) {
+            if (!response.success) {
+                alert(response.message);
+                return;
+            }
+            loadProfessors();
+        }
+    });
+}
+
+// RECHERCHE SIMPLE (filtrage côté front)
+$("#search").on("input", function() {
+    const q = $(this).val().toLowerCase();
+
+    $("#professorsTable tr").each(function() {
+        const text = $(this).text().toLowerCase();
+        $(this).toggle(text.indexOf(q) > -1);
+    });
+});
+
+$(document).ready(loadProfessors);
+</script>
+
+</body>
+</html>

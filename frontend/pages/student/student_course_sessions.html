@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Sessions du cours</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 40px;
+        }
+
+        h1 { margin-top: 0; }
+
+        .session {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .session:hover {
+            background: #e9f0fb;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Sessions du cours</h1>
+<div id="sessions">Chargement...</div>
+
+<script>
+const API = "../../../backend/api";
+
+// Récupérer l’ID du cours dans l’URL
+const urlParams = new URLSearchParams(window.location.search);
+const course_id = urlParams.get("course_id");
+
+if(!course_id){
+    document.body.innerHTML = "<h2>❌ Cours non trouvé</h2>";
+}
+
+// Charger les sessions
+$.get(`${API}/students/getCourseSessions.php?course_id=${course_id}`, function(res){
+    if(!res.success){
+        $("#sessions").html("Erreur : " + res.message);
+        return;
+    }
+
+    if(res.data.length === 0){
+        $("#sessions").html("Aucune session disponible.");
+        return;
+    }
+
+    let html = "";
+    res.data.forEach(s => {
+        html += `
+            <div class="session" onclick="openSession(${s.id})">
+                <b>Date :</b> ${s.date}<br>
+                <b>Début :</b> ${s.start_time} – <b>Fin :</b> ${s.end_time}
+            </div>
+        `;
+    });
+
+    $("#sessions").html(html);
+});
+
+// Aller au détail de session
+function openSession(id){
+    window.location.href = `student_attendance_detail.html?session_id=${id}`;
+}
+</script>
+
+</body>
+</html>

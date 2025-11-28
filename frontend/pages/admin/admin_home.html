@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Tableau de bord — Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            background: #111827;
+            color: #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .brand {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .brand span {
+            color: #3b82f6;
+        }
+
+        .menu {
+            flex: 1;
+        }
+
+        .menu-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .menu-item a {
+            color: inherit;
+            text-decoration: none;
+            display: block;
+        }
+
+        .menu-item.active,
+        .menu-item:hover {
+            background: #1f2937;
+        }
+
+        .sidebar-footer {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* MAIN */
+        .main {
+            flex: 1;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar-title {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .topbar-user {
+            font-size: 14px;
+            color: #4b5563;
+        }
+
+        .btn-logout {
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: none;
+            background: #ef4444;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        /* CARDS */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 16px 18px;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+        }
+
+        .card-title {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .card-sub {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* CONTENT GRID */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr;
+            gap: 16px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 14px;
+            padding: 16px 18px;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .panel-sub {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .tag {
+            font-size: 11px;
+            background: #e5f0ff;
+            color: #1d4ed8;
+            padding: 4px 8px;
+            border-radius: 999px;
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            border-bottom: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            display: inline-block;
+        }
+
+        .badge-present {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .badge-absent {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .badge-pending {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .menu {
+                display: flex;
+                gap: 8px;
+            }
+
+            .menu-item {
+                margin-bottom: 0;
+            }
+
+            .main {
+                padding: 16px;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .cards {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="brand">
+            Attendance<span>Admin</span>
+        </div>
+
+        <div class="menu">
+            <div class="menu-item active">
+                <a href="admin_home.html">Dashboard</a>
+            </div>
+            <div class="menu-item">
+                <a href="admin_students.html">Étudiants</a>
+            </div>
+            <div class="menu-item">
+                <a href="admin_professors.html">Professeurs</a>
+            </div>
+            <div class="menu-item">
+                <a href="admin_courses.html">Cours</a>
+            </div>
+            <div class="menu-item">
+                <a href="admin_groups.html">Groupes</a>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            INF101 — Système de présence<br>
+            <span id="sidebar-user"></span>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <div class="topbar">
+            <div class="topbar-title">Tableau de bord — Administrateur</div>
+
+            <div class="topbar-user">
+                <span id="top-username">Connecté</span>
+                <button class="btn-logout" id="btnLogout">Déconnexion</button>
+            </div>
+        </div>
+
+        <!-- STAT CARDS -->
+        <div class="cards">
+            <div class="card">
+                <div class="card-title">Nombre d'étudiants</div>
+                <div class="card-value" id="stat-students">–</div>
+                <div class="card-sub">Total inscrits dans le système</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Nombre de professeurs</div>
+                <div class="card-value" id="stat-professors">–</div>
+                <div class="card-sub">Professeurs actifs</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Cours</div>
+                <div class="card-value" id="stat-courses">–</div>
+                <div class="card-sub">Cours enregistrés</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Présence aujourd'hui</div>
+                <div class="card-value" id="stat-today">–</div>
+                <div class="card-sub">Sessions enregistrées aujourd'hui</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Dernières sessions de présence</div>
+                        <div class="panel-sub">Aperçu des dernières séances enregistrées</div>
+                    </div>
+                    <span class="tag">Aperçu</span>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cours</th>
+                            <th>Date</th>
+                            <th>Groupe</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody id="last-sessions">
+                        <tr>
+                            <td>INF101 — Algorithmique</td>
+                            <td>2025-11-27</td>
+                            <td>Groupe A</td>
+                            <td><span class="badge badge-present">Clôturée</span></td>
+                        </tr>
+                        <tr>
+                            <td>INF102 — Structures de données</td>
+                            <td>2025-11-27</td>
+                            <td>Groupe B</td>
+                            <td><span class="badge badge-pending">En cours</span></td>
+                        </tr>
+                        <tr>
+                            <td>INF103 — Programmation Web</td>
+                            <td>2025-11-26</td>
+                            <td>Groupe A</td>
+                            <td><span class="badge badge-present">Clôturée</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">Résumé rapide</div>
+                        <div class="panel-sub">Vue d'ensemble de l'activité</div>
+                    </div>
+                </div>
+
+                <ul style="list-style:none; margin-top: 8px; font-size: 13px; color:#4b5563;">
+                    <li>• Gestion des étudiants, professeurs, cours et groupes.</li>
+                    <li>• Création et clôture des sessions par les professeurs.</li>
+                    <li>• Consultation des présences par les étudiants.</li>
+                    <li>• Aperçu global des metrics via les cartes.</li>
+                </ul>
+
+                <div style="margin-top: 16px; font-size: 12px; color:#9ca3af;">
+                    Astuce : Vérifiez les groupes et cours avant de créer de nouvelles sessions.
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+$(document).ready(function () {
+
+    // ✔ CHEMIN CORRIGÉ
+    $.ajax({
+        url: "../../../backend/api/auth/check_session.php",
+        method: "GET",
+        success: function (response) {
+            if (!response.success || response.data.role_id != 1) {
+                window.location.href = "../login.html";
+            } else {
+                $("#top-username").text("Admin #" + response.data.user_id);
+                $("#sidebar-user").text("ID utilisateur : " + response.data.user_id);
+            }
+        },
+        error: function () {
+            window.location.href = "../login.html";
+        }
+    });
+
+    // STATISTIQUES TEMPORAIREMENT STATIQUES
+    $("#stat-students").text("32");
+    $("#stat-professors").text("5");
+    $("#stat-courses").text("8");
+    $("#stat-today").text("3");
+
+    // LOGOUT — CHEMIN CORRIGÉ
+    $("#btnLogout").click(function() {
+        $.ajax({
+            url: "../../../backend/api/auth/logout.php",
+            method: "POST",
+            success: function() {
+                window.location.href = "../login.html";
+            },
+            error: function() {
+                window.location.href = "../login.html";
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>

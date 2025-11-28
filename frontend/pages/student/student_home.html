@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil Étudiant</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            background: #f4f6f9;
+        }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: #1565c0;
+            color: white;
+            padding: 25px;
+        }
+
+        .sidebar h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .menu-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 18px;
+        }
+
+        .menu-item:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .content {
+            flex-grow: 1;
+            padding: 40px;
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 32px;
+        }
+
+        .course {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .course:hover {
+            background: #e9f0fb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Étudiant</h2>
+
+    <div class="menu-item" id="btn-home">🏠 Accueil</div>
+    <div class="menu-item" id="btn-logout">🚪 Déconnexion</div>
+</div>
+
+<div class="content">
+    <h1>Mes cours</h1>
+
+    <div id="course-list">Chargement...</div>
+</div>
+
+<script>
+const API = "../../../backend/api";
+
+// Déconnexion
+$("#btn-logout").click(function(){
+    $.get(`${API}/auth/logout.php`, function(){
+        window.location.href = "../../login.html";
+    });
+});
+
+// Charger les cours
+$.get(`${API}/students/getMyCourses.php`, function(res){
+    if(!res.success){
+        $("#course-list").html("Erreur : " + res.message);
+        return;
+    }
+
+    if(res.data.length === 0){
+        $("#course-list").html("Aucun cours trouvé.");
+        return;
+    }
+
+    let html = "";
+    res.data.forEach(c => {
+        html += `
+            <div class="course" onclick="openCourse(${c.id})">
+                <b>${c.title}</b><br>
+                Code : ${c.code}
+            </div>
+        `;
+    });
+
+    $("#course-list").html(html);
+});
+
+// Redirection vers les sessions d’un cours
+function openCourse(id){
+    window.location.href = `student_course_sessions.html?course_id=${id}`;
+}
+</script>
+
+</body>
+</html>

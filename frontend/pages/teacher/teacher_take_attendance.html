@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Présence</title>
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+</head>
+
+<body style="padding:40px; font-family:Arial">
+
+<h1>Prendre la présence</h1>
+
+<div id="list">Chargement...</div>
+
+<button onclick="save()" style="padding:12px; margin-top:20px;">Enregistrer</button>
+
+<script>
+const session_id = new URLSearchParams(window.location.search).get("session_id");
+
+function load(){
+    $.get(`../../../backend/api/professor/getSessionStudents.php?session_id=${session_id}`, res=>{
+        if(!res.success) return $("#list").text(res.message);
+
+        $("#list").empty();
+
+        res.data.forEach(s=>{
+            $("#list").append(`
+                <div>
+                    <input type="checkbox" class="presence" data-id="${s.id}">
+                    ${s.first_name} ${s.last_name}
+                </div>
+            `);
+        });
+    });
+}
+
+function save(){
+    let present=[];
+
+    $(".presence:checked").each(function(){
+        present.push($(this).data("id"));
+    });
+
+    $.post("../../../backend/api/professor/updateAttendance.php", {
+        session_id,
+        present: JSON.stringify(present)
+    }, res=>{
+        alert(res.message);
+        window.location.href="teacher_sessions.html";
+    });
+}
+
+load();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Sessions</title>
+
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<style>
+body { margin:0; display:flex; background:#f4f6f9; font-family:Arial }
+.sidebar { width:260px; height:100vh; background:#1e3a8a; color:white; padding:30px 20px; }
+.sidebar div { padding:15px; border-radius:8px; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; gap:12px; }
+.sidebar div:hover { background:rgba(255,255,255,0.2); }
+.content { flex:1; padding:40px; }
+.card { background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); margin-bottom:15px; }
+.btn { padding:6px 12px; background:#2563eb; color:white; border-radius:6px; cursor:pointer; margin-right:10px; }
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>Professeur</h2>
+    <div onclick="window.location.href='teacher_home.html'"><span class="material-icons">home</span> Accueil</div>
+    <div onclick="window.location.href='teacher_session_create.html'"><span class="material-icons">add_circle</span> Nouvelle session</div>
+    <div onclick="logout()"><span class="material-icons">logout</span> Déconnexion</div>
+</div>
+
+<div class="content">
+    <h1>Mes sessions</h1>
+    <div id="list">Chargement...</div>
+</div>
+
+<script>
+function logout(){
+    $.get("../../../backend/api/auth/logout.php", ()=> window.location.href="../login.html");
+}
+
+function loadSessions(){
+    $.get("../../../backend/api/professor/getSessions.php", res=>{
+
+        if(!res.success) return $("#list").text(res.message);
+
+        $("#list").empty();
+
+        res.data.forEach(s=>{
+
+            $("#list").append(`
+                <div class="card">
+                    <b>${s.course_name}</b> — Groupe ${s.group_name}<br>
+                    ${s.date} à ${s.time}<br><br>
+                    <span class="btn" onclick="take(${s.id})">Prendre présence</span>
+                    <span class="btn" onclick="view(${s.id})">Voir détails</span>
+                </div>
+            `);
+        });
+    });
+}
+
+function take(id){ window.location.href="teacher_take_attendance.html?session_id="+id; }
+function view(id){ window.location.href="teacher_session_view.html?session_id="+id; }
+
+loadSessions();
+</script>
+
+</body>
+</html>

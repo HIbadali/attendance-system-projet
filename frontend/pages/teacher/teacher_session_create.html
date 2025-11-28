@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Créer session</title>
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<script src="../../../js/jquery-3.6.0.min.js"></script>
+
+<style>
+body { margin:0; display:flex; background:#f4f6f9; font-family:Arial }
+.sidebar { width:260px; height:100vh; background:#1e3a8a; color:white; padding:30px 20px; }
+.sidebar div { padding:15px; border-radius:8px; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; gap:12px; }
+.sidebar div:hover { background:rgba(255,255,255,0.2); }
+.content { flex:1; padding:40px; }
+.card { width:420px; background:white; padding:25px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+input, select { width:100%; padding:12px; margin-bottom:18px; border:1px solid #ccc; border-radius:6px; }
+button { width:100%; padding:12px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer; }
+button:hover { background:#1e40af; }
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>Professeur</h2>
+    <div onclick="window.location.href='teacher_home.html'"><span class="material-icons">home</span> Accueil</div>
+    <div onclick="window.location.href='teacher_sessions.html'"><span class="material-icons">event</span> Sessions</div>
+    <div onclick="logout()"><span class="material-icons">logout</span> Déconnexion</div>
+</div>
+
+<div class="content">
+    <h1>Créer une session</h1>
+
+    <div class="card">
+        <label>Cours</label>
+        <select id="course"></select>
+
+        <label>Groupe</label>
+        <select id="group"></select>
+
+        <label>Date</label>
+        <input type="date" id="date">
+
+        <label>Heure</label>
+        <input type="time" id="time">
+
+        <button onclick="createSession()">Créer</button>
+
+        <p id="msg"></p>
+    </div>
+</div>
+
+<script>
+function logout(){
+    $.get("../../../backend/api/auth/logout.php", ()=> window.location.href="../login.html");
+}
+
+function loadCourses(){
+    $.get("../../../backend/api/professor/getMyCourses.php", res=>{
+        res.data.forEach(c=> $("#course").append(`<option value="${c.id}">${c.name}</option>`));
+    });
+}
+
+function loadGroups(){
+    $.get("../../../backend/api/professor/getMyGroups.php", res=>{
+        res.data.forEach(g=> $("#group").append(`<option value="${g.id}">${g.group_name}</option>`));
+    });
+}
+
+function createSession(){
+    $.post("../../../backend/api/professor/createSession.php", {
+        course_id: $("#course").val(),
+        group_id: $("#group").val(),
+        date: $("#date").val(),
+        time: $("#time").val()
+    }, res=>{
+        if(!res.success) return $("#msg").text(res.message);
+
+        $("#msg").css("color","green").text("Session créée !");
+        setTimeout(()=>window.location.href="teacher_sessions.html",1000);
+    });
+}
+
+loadCourses();
+loadGroups();
+</script>
+
+</body>
+</html>

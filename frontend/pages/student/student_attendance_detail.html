@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Détails de présence</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 40px;
+        }
+
+        h1 { margin-top: 0; }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            max-width: 500px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 12px 15px;
+            background: #1565c0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0d47a1;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Détail de la session</h1>
+
+<div class="box">
+    <p id="status">Chargement...</p>
+
+    <div id="justification-box" style="display:none;">
+        <h3>Envoyer une justification :</h3>
+        <textarea id="justification"></textarea>
+        <button onclick="sendJustification()">Envoyer</button>
+    </div>
+</div>
+
+<script>
+const API = "../../../backend/api";
+
+const urlParams = new URLSearchParams(window.location.search);
+const session_id = urlParams.get("session_id");
+
+if(!session_id){
+    document.body.innerHTML = "<h2>❌ Session introuvable</h2>";
+}
+
+// Charger la présence
+$.get(`${API}/students/getSessionAttendance.php?session_id=${session_id}`, function(res){
+    if(!res.success){
+        $("#status").text("Erreur : " + res.message);
+        return;
+    }
+
+    const a = res.data;
+
+    if(!a){
+        $("#status").text("Vous n'avez pas encore d'enregistrement.");
+        return;
+    }
+
+    $("#status").html(`
+        <b>Statut :</b> ${a.status.toUpperCase()}<br>
+        <b>Justification :</b> ${a.justification ?? "Aucune"}
+    `);
+
+    if(a.status === "absent"){
+        $("#justification-box").show();
+    }
+});
+
+// Envoyer justification
+function sendJustification(){
+    let text = $("#justification").val().trim();
+
+    if(text === ""){
+        alert("Veuillez écrire une justification.");
+        return;
+    }
+
+    $.ajax({
+        url: `${API}/students/sendJustification.php`,
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            session_id: session_id,
+            justification: text
+        }),
+        success: function(res){
+            alert(res.message);
+            location.reload();
+        }
+    });
+}
+</script>
+
+</body>
+</html>
