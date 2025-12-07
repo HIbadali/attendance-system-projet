@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Profil - Professeur</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+body{margin:0;display:flex;font-family:Arial;}
+.sidebar{width:260px;background:#1565c0;padding:25px;height:100vh;color:white;}
+.menu-item{cursor:pointer;margin:8px;}
+.content{padding:30px;flex-grow:1;}
+.profile-box{background:white;padding:20px;border-radius:8px;width:400px;}
+</style>
+
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Professeur</h2>
+    <div class="menu-item" onclick="go('teacher_home.html')">📘 Cours</div>
+    <div class="menu-item" onclick="go('teacher_sessions.html')">📅 Sessions</div>
+    <div class="menu-item" onclick="go('teacher_stats.html')">📊 Statistiques</div>
+    <div class="menu-item" onclick="go('teacher_students.html')">👨‍🎓 Gestion Étudiants</div>
+    <div class="menu-item" onclick="go('teacher_profile.html')">👤 Profil</div>
+    <div class="menu-item" id="logout">🚪 Déconnexion</div>
+</div>
+
+<div class="content">
+    <h1>Profil</h1>
+    
+    <div class="profile-box">
+        <p><b>Nom :</b> Professeur Exemple</p>
+        <p><b>Email :</b> prof@mail.com</p>
+        <button>Modifier profil</button>
+    </div>
+</div>
+
+<script>
+function go(p){window.location.href=p;}
+
+$("#logout").click(()=>{ 
+    $.get("../../../backend/api/auth/logout.php", ()=>{window.location.href="../../login.html"; })
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes cours</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body{margin:0;display:flex;font-family:Arial;background:#f4f6f9;}
+        .sidebar{width:260px;background:#6a0dad;height:100vh;color:white;padding:25px;}
+        .sidebar h2{margin-bottom:20px;}
+        .menu-item{padding:12px;border-radius:8px;cursor:pointer;margin-bottom:10px;}
+        .menu-item:hover{background:rgba(255,255,255,0.25);}
+        .content{padding:40px;width:100%;}
+        table{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;}
+        th,td{padding:12px;border-bottom:1px solid #eee;}
+        th{background:#6a0dad;color:white;text-align:left;}
+        .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#ffd54f;color:#5d4037;font-size:11px;font-weight:bold;margin-left:6px;}
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Étudiant</h2>
+    <div class="menu-item" onclick="go('student_home.html')">🏠 Dashboard</div>
+    <div class="menu-item" onclick="go('student_courses.html')">📘 Mes cours</div>
+    <div class="menu-item" onclick="go('student_stats.html')">📊 Statistiques</div>
+    <div class="menu-item" onclick="go('student_schedule.html')">📅 Emploi du temps</div>
+    <div class="menu-item" onclick="logout()">🚪 Déconnexion</div>
+</div>
+
+<div class="content">
+    <h1>Mes cours</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Cours</th>
+                <th>Code</th>
+                <th>Note</th>
+                <th>Présence</th>
+                <th>Absence</th>
+                <th>Participation</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody id="tbCourses"></tbody>
+    </table>
+</div>
+
+<script>
+function go(p){window.location.href=p;}
+function logout(){ $.get("../../../backend/api/auth/logout.php",()=>{window.location.href="../../login.html";}); }
+
+$.get("../../../backend/api/student/getMyCourses.php", function(res){
+    if(!res.success){
+        $("#tbCourses").html("<tr><td colspan='7'>Erreur : "+res.message+"</td></tr>");
+        return;
+    }
+    if(res.data.length === 0){
+        $("#tbCourses").html("<tr><td colspan='7'>Aucun cours.</td></tr>");
+        return;
+    }
+
+    let html = "";
+    res.data.forEach(c=>{
+        html += `
+        <tr>
+            <td>${c.title}</td>
+            <td>${c.code}</td>
+            <td>${c.note ?? 0}/20</td>
+            <td>${c.presence}</td>
+            <td>${c.absence}</td>
+            <td>${c.participation}</td>
+            <td>${c.best == 1 ? "<span class='badge'>🏅 Best student</span>" : "-"}</td>
+        </tr>`;
+    });
+    $("#tbCourses").html(html);
+});
+</script>
+
+</body>
+</html>

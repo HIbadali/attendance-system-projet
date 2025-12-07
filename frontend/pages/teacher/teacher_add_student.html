@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ajouter Élève</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+body{margin:0;display:flex;font-family:Arial;background:#eef1f5;}
+.sidebar{width:260px;background:#1565c0;padding:25px;height:100vh;color:white;}
+.menu-item{padding:12px;margin:8px;background:rgba(255,255,255,0.15);border-radius:6px;cursor:pointer;}
+.menu-item:hover{background:rgba(255,255,255,0.25);}
+.content{padding:30px;width:100%;}
+input{
+    width:320px;padding:10px;margin:10px 0;border-radius:6px;border:1px solid #bbb;
+}
+button{
+    background:#1565c0;color:white;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;
+}
+button:hover{background:#124ea2;}
+.box{background:white;padding:20px;border-radius:8px;width:420px;}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>Professeur</h2>
+    <div class="menu-item" onclick="go('teacher_home.html')">📘 Cours</div>
+    <div class="menu-item" onclick="go('teacher_students.html')">👨‍🎓 Étudiants</div>
+    <div class="menu-item" onclick="go('teacher_stats.html')">📊 Statistiques</div>
+</div>
+
+<div class="content">
+<h1>Ajouter un étudiant</h1>
+
+<div class="box">
+    <input id="fname" placeholder="Prénom">
+    <input id="lname" placeholder="Nom">
+    <input id="email" placeholder="Email (ex: student1@attendance.com)">
+    <input id="course" placeholder="Code cours (ex: INF101)">
+    <button onclick="add()">Ajouter</button>
+</div>
+
+</div>
+
+<script>
+function go(p){window.location.href=p;}
+
+function add(){
+    $.ajax({
+        url:"../../../backend/api/professor/addStudent.php",
+        type:"POST",
+        contentType:"application/json",
+        data:JSON.stringify({
+            first_name:$("#fname").val(),
+            last_name:$("#lname").val(),
+            email:$("#email").val(),
+            course_code:$("#course").val()
+        }),
+        success:function(res){
+            alert(res.message);
+            window.location.href = "teacher_students.html";
+        }
+    });
+}
+</script>
+
+</body>
+</html>

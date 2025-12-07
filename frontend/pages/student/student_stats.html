@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Statistiques</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body{margin:0;display:flex;font-family:Arial;background:#f4f6f9;}
+        .sidebar{width:260px;background:#6a0dad;height:100vh;color:white;padding:25px;}
+        .sidebar h2{margin-bottom:20px;}
+        .menu-item{padding:12px;border-radius:8px;cursor:pointer;margin-bottom:10px;}
+        .menu-item:hover{background:rgba(255,255,255,0.25);}
+        .content{padding:40px;width:100%;}
+        .card{background:white;border-radius:10px;padding:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Étudiant</h2>
+    <div class="menu-item" onclick="go('student_home.html')">🏠 Dashboard</div>
+    <div class="menu-item" onclick="go('student_courses.html')">📘 Mes cours</div>
+    <div class="menu-item" onclick="go('student_stats.html')">📊 Statistiques</div>
+    <div class="menu-item" onclick="go('student_schedule.html')">📅 Emploi du temps</div>
+    <div class="menu-item" onclick="logout()">🚪 Déconnexion</div>
+</div>
+
+<div class="content">
+    <h1>Statistiques</h1>
+
+    <div class="card">
+        <canvas id="chartPresence"></canvas>
+    </div>
+</div>
+
+<script>
+function go(p){window.location.href=p;}
+function logout(){ $.get("../../../backend/api/auth/logout.php",()=>{window.location.href="../../login.html";}); }
+
+$.get("../../../backend/api/student/getMyStats.php", function(res){
+    if(!res.success){console.log(res);return;}
+    const s = res.data || {};
+    const presence = s.total_presence ?? 0;
+    const absence  = s.total_absence ?? 0;
+
+    new Chart(document.getElementById("chartPresence"), {
+        type:"pie",
+        data:{
+            labels:["Présence","Absence"],
+            datasets:[{
+                data:[presence, absence],
+                backgroundColor:["#4caf50","#f44336"]
+            }]
+        }
+    });
+});
+</script>
+
+</body>
+</html>

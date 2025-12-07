@@ -3,61 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <title>Tableau de bord - Professeur</title>
-
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
             display: flex;
-            background: #f4f6f9;
+            font-family: Arial, sans-serif;
+            background: #f5f7fa;
         }
 
         .sidebar {
             width: 260px;
             background: #1565c0;
-            color: white;
-            height: 100vh;
             padding: 25px;
+            height: 100vh;
+            color: white;
         }
 
         .sidebar h2 {
-            margin-top: 0;
+            margin: 0 0 20px 0;
             font-size: 24px;
             font-weight: bold;
         }
 
         .menu-item {
             padding: 12px 15px;
-            border-radius: 8px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 6px;
             cursor: pointer;
-            margin-top: 15px;
-            font-size: 18px;
+            margin-bottom: 12px;
+            font-size: 17px;
         }
 
         .menu-item:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.25);
         }
 
         .content {
             flex-grow: 1;
-            padding: 40px;
+            padding: 35px;
         }
 
         h1 {
-            font-size: 32px;
-            margin-bottom: 20px;
-            color: #333;
+            font-size: 35px;
+            margin-bottom: 25px;
         }
 
         .course {
             background: white;
             padding: 15px;
-            border-radius: 8px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            cursor: pointer;
         }
     </style>
 </head>
@@ -66,84 +66,54 @@
     <div class="sidebar">
         <h2>Professeur</h2>
 
-        <div class="menu-item" id="btn-courses">📘 Cours</div>
-        <div class="menu-item" id="btn-create-session">➕ Créer une session</div>
+        <div class="menu-item" onclick="navigate('teacher_home.html')">📘 Cours</div>
+        <div class="menu-item" onclick="navigate('teacher_sessions.html')">📅 Sessions</div>
+        <div class="menu-item" onclick="navigate('teacher_stats.html')">📊 Statistiques</div>
+        <div class="menu-item" onclick="navigate('teacher_students.html')">👨‍🎓 Gestion Étudiants</div>
+        <div class="menu-item" onclick="navigate('teacher_profile.html')">👤 Profil</div>
         <div class="menu-item" id="btn-logout">🚪 Déconnexion</div>
     </div>
 
     <div class="content">
         <h1>Mes cours</h1>
-
         <div id="course-list">Chargement...</div>
     </div>
 
 <script>
-const API_BASE = "../../../backend/api"; // 🔥 3 points ici
 
-// Vérifier la session
-$.get(`${API_BASE}/auth/check_session.php`)
- .done(function(res){
-     console.log("check_session:", res);
-     if (!res.success || res.role !== "professor") {
-         window.location.href = "../../login.html";
-     }
- })
- .fail(function(err){
-     console.error("Erreur check_session", err);
- });
+function navigate(page){
+    window.location.href = page;
+}
 
-// Déconnexion
 $("#btn-logout").click(function(){
-    $.get(`${API_BASE}/auth/logout.php`)
-     .done(function(){
-         window.location.href = "../../login.html";
-     })
-     .fail(function(err){
-         console.error("Erreur logout", err);
-         alert("Erreur lors de la déconnexion");
-     });
+    $.get("../../../backend/api/auth/logout.php", function(){
+        window.location.href = "../../login.html";
+    });
 });
 
-// Aller à la création de session
-$("#btn-create-session").click(function(){
-    window.location.href = "teacher_session_create.html";
-});
-
-// Charger les cours
 function loadCourses(){
-    $.get(`${API_BASE}/professor/getMyCourses.php`)
-     .done(function(res){
-         console.log("getMyCourses:", res);
+    $.get("../../../backend/api/professor/getMyCourses.php", function(res){
+        if(!res.success){
+            $("#course-list").html("Erreur serveur");
+            return;
+        }
 
-         if (!res.success) {
-             $("#course-list").html("❌ Erreur : " + res.message);
-             return;
-         }
+        let html = "";
+        res.data.forEach(c => {
+            html += `
+                <div class="course">
+                    <b>${c.title}</b><br>
+                    Code : ${c.code}
+                </div>
+            `;
+        });
 
-         if (res.data.length === 0) {
-             $("#course-list").html("Aucun cours trouvé.");
-             return;
-         }
-
-         let html = "";
-         res.data.forEach(c => {
-             html += `
-                 <div class="course">
-                     <b>${c.title}</b><br>
-                     Code : ${c.code}
-                 </div>
-             `;
-         });
-
-         $("#course-list").html(html);
-     })
-     .fail(function(err){
-         console.error("Erreur getMyCourses", err);
-         $("#course-list").html("❌ API inaccessible");
-     });
+        $("#course-list").html(html);
+    });
 }
 
 loadCourses();
+
 </script>
 
 </body>

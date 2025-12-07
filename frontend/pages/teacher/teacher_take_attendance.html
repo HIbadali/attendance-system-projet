@@ -1,52 +1,99 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Présence</title>
-<script src="../../../js/jquery-3.6.0.min.js"></script>
+<title>Prise de présence</title>
+
+<!-- jQuery FIXÉ ICI 👇 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+body{margin:0;font-family:Arial;background:#f3f5f8;padding:20px;}
+.box{width:520px;margin:auto;background:white;padding:25px;border-radius:10px;
+     box-shadow:0 2px 10px rgba(0,0,0,0.15);}
+.student{
+    margin:10px 0;padding:12px;border-radius:8px;background:#eef3fb;
+    display:flex;justify-content:space-between;align-items:center;
+}
+.btn{
+    padding:10px;background:#1565c0;color:white;border:none;
+    border-radius:6px;cursor:pointer;font-size:15px;width:100%;
+}
+.btn:hover{background:#0c4296;}
+select{padding:8px;border-radius:6px;font-size:14px;}
+</style>
 </head>
 
-<body style="padding:40px; font-family:Arial">
+<body>
 
-<h1>Prendre la présence</h1>
+<div class="box">
+    <h2>Prise de présence</h2>
 
-<div id="list">Chargement...</div>
+    <!-- LISTE ÉTUDIANTS -->
+    <div id="student-list">Chargement...</div>
 
-<button onclick="save()" style="padding:12px; margin-top:20px;">Enregistrer</button>
+    <br>
+    <button class="btn" onclick="save()">Valider</button>
+</div>
 
 <script>
-const session_id = new URLSearchParams(window.location.search).get("session_id");
+const params = new URLSearchParams(window.location.search);
+const session_id = params.get("session");
 
+// Charger liste étudiants
 function load(){
-    $.get(`../../../backend/api/professor/getSessionStudents.php?session_id=${session_id}`, res=>{
-        if(!res.success) return $("#list").text(res.message);
+    $.get("../../../backend/api/professor/getStudentsForSession.php",
+    {session_id: session_id},
+    function(res){
 
-        $("#list").empty();
+        if(!res.success){
+            $("#student-list").html("Erreur : "+res.message);
+            return;
+        }
 
+        if(res.data.length === 0){
+            $("#student-list").html("Aucun étudiant assigné.");
+            return;
+        }
+
+        let html = "";
         res.data.forEach(s=>{
-            $("#list").append(`
-                <div>
-                    <input type="checkbox" class="presence" data-id="${s.id}">
-                    ${s.first_name} ${s.last_name}
-                </div>
-            `);
+            html += `
+            <div class="student">
+                <b>${s.last_name} ${s.first_name}</b>
+                <select id="s${s.id}">
+                    <option value="present">Présent</option>
+                    <option value="absent">Absent</option>
+                </select>
+            </div>`;
         });
+
+        $("#student-list").html(html);
     });
 }
 
+// Sauvegarder présence
 function save(){
-    let present=[];
+    let data = [];
 
-    $(".presence:checked").each(function(){
-        present.push($(this).data("id"));
+    $(".student select").each(function(){
+        let id = $(this).attr("id").substring(1);
+        let val = $(this).val();
+        data.push({student_id: id, status: val});
     });
 
-    $.post("../../../backend/api/professor/updateAttendance.php", {
-        session_id,
-        present: JSON.stringify(present)
-    }, res=>{
-        alert(res.message);
-        window.location.href="teacher_sessions.html";
+    $.ajax({
+        url: "../../../backend/api/professor/saveAttendance.php",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            session_id: session_id,
+            students: data
+        }),
+        success: d=>{
+            alert("Présence enregistrée !");
+            window.location.href = "teacher_sessions.html";
+        }
     });
 }
 

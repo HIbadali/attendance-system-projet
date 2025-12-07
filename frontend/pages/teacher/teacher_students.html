@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des étudiants</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            margin:0;
+            font-family:Arial, sans-serif;
+            display:flex;
+            background:#f4f6f9;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width:260px;
+            background:#1565c0;
+            height:100vh;
+            color:white;
+            padding:25px;
+        }
+        .sidebar h2 {
+            margin-bottom:20px;
+        }
+        .menu-item {
+            padding:12px;
+            cursor:pointer;
+            margin-bottom:10px;
+            border-radius:6px;
+        }
+        .menu-item:hover {
+            background:rgba(255,255,255,0.25);
+        }
+
+        /* CONTENT */
+        .content {
+            width:100%;
+            padding:40px;
+        }
+
+        /* HEADER BAR */
+        .top-bar {
+            display:flex;
+            align-items:center;
+            gap:12px;
+        }
+        .top-bar h1 {
+            flex:1;
+        }
+
+        /* TABLE */
+        table {
+            width:100%;
+            background:white;
+            border-radius:10px;
+            border-collapse:collapse;
+            overflow:hidden;
+            margin-top:20px;
+        }
+        th {
+            background:#1565c0;
+            color:white;
+            padding:12px;
+        }
+        td {
+            padding:12px;
+            border-bottom:1px solid #ddd;
+        }
+        tr:hover {
+            background:#ebeaff;
+        }
+
+        /* INPUTS */
+        input {
+            width:60px;
+            padding:6px;
+            border-radius:6px;
+            border:1px solid #bbb;
+        }
+
+        /* BUTTONS */
+        .add-btn {
+            padding:10px 16px;
+            background:#28a745;
+            color:white;
+            border:none;
+            border-radius:6px;
+            font-size:15px;
+            cursor:pointer;
+        }
+        .add-btn:hover {
+            background:#218838;
+        }
+
+        /* POPUP ADD STUDENT */
+        #popup {
+            background:white;
+            width:360px;
+            padding:20px;
+            border-radius:10px;
+            position:fixed;
+            top:50%;
+            left:50%;
+            transform:translate(-50%,-50%);
+            box-shadow:0 4px 15px rgba(0,0,0,0.2);
+            display:none;
+        }
+        #popup input {
+            width:98%;
+            margin-bottom:12px;
+        }
+        .close-btn {
+            cursor:pointer;
+            float:right;
+            font-size:20px;
+            margin-top:-8px;
+        }
+        .error {
+            color:#c00;
+            margin-top:8px;
+            font-size:14px;
+        }
+
+        /* COMMENT COLORS */
+        .comment-good   { color:#0f9d58; font-weight:bold; }
+        .comment-medium { color:#f4b000; font-weight:bold; }
+        .comment-bad    { color:#d93025; font-weight:bold; }
+    </style>
+</head>
+
+<body>
+
+    <!-- 🔵 SIDEBAR -->
+    <div class="sidebar">
+        <h2>Professeur</h2>
+        <div class="menu-item" onclick="go('teacher_home.html')">🏠 Dashboard</div>
+        <div class="menu-item" onclick="go('teacher_sessions.html')">📅 Sessions</div>
+        <div class="menu-item" onclick="go('teacher_students.html')">👨‍🎓 Étudiants</div>
+        <div class="menu-item" onclick="go('teacher_stats.html')">📊 Statistiques</div>
+        <div class="menu-item" onclick="window.location.href='../login.html'">🚪 Déconnexion</div>
+    </div>
+
+    <!-- 🔷 CONTENT -->
+    <div class="content">
+
+        <div class="top-bar">
+            <h1>Gestion des étudiants</h1>
+
+            <select id="courseSelect" style="padding:10px;border-radius:6px;border:1px solid #aaa;"></select>
+
+            <button class="add-btn" onclick="showAdd()">➕ Ajouter élève</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Présence</th>
+                    <th>Absence</th>
+                    <th>Participation</th>
+                    <th>Note</th>
+                    <th>Commentaire</th>
+                    <th>Best</th>
+                </tr>
+            </thead>
+            <tbody id="tbStudents"></tbody>
+        </table>
+
+    </div>
+
+    <!-- POPUP AJOUT ÉLÈVE -->
+    <div id="popup">
+        <span class="close-btn" onclick="hideAdd()">✖</span>
+        <h3>Ajouter un élève</h3>
+        <input type="text" id="lname" placeholder="Nom">
+        <input type="text" id="fname" placeholder="Prénom">
+        <div id="popup-error" class="error"></div>
+        <button class="add-btn" style="width:100%;" onclick="addStudent()">Ajouter</button>
+    </div>
+
+<script>
+function go(p){ window.location.href = p; }
+
+/* --- COMMENTAIRE AUTOMATIQUE SELON LA NOTE --- */
+function getComment(note){
+    note = parseInt(note || 0);
+    if(note >= 15) return "<span class='comment-good'>Excellent work</span>";
+    if(note >= 10) return "<span class='comment-medium'>Can improve</span>";
+    return "<span class='comment-bad'>Needs improvement</span>";
+}
+
+/* --- CHARGER LES COURS DU PROF --- */
+$.get("../../../backend/api/professor/getMyCourses.php", function(res){
+    if(res.success){
+        res.data.forEach(c=>{
+            $("#courseSelect").append(
+                `<option value="${c.id}">${c.code} — ${c.title}</option>`
+            );
+        });
+        loadStudents(); // charger le premier cours
+    }
+});
+
+$("#courseSelect").change(loadStudents);
+
+/* --- CHARGER LES ÉTUDIANTS DU COURS --- */
+function loadStudents(){
+    let cid = $("#courseSelect").val();
+    if(!cid){
+        $("#tbStudents").html("");
+        return;
+    }
+
+    $.get("../../../backend/api/professor/getStudentsByCourse.php?course_id="+cid,
+    function(res){
+        if(!res.success){
+            $("#tbStudents").html("<tr><td colspan='7'>Erreur : "+res.message+"</td></tr>");
+            return;
+        }
+
+        if(res.data.length === 0){
+            $("#tbStudents").html("<tr><td colspan='7'>Aucun élève pour ce cours.</td></tr>");
+            return;
+        }
+
+        let html = "";
+        res.data.forEach(s=>{
+            html += `
+            <tr>
+                <td>${s.last_name} ${s.first_name}</td>
+                <td><input value="${s.presence}" onblur="update(${s.student_id}, 'presence', this.value)"></td>
+                <td><input value="${s.absence}" onblur="update(${s.student_id}, 'absence', this.value)"></td>
+                <td><input value="${s.participation}" onblur="update(${s.student_id}, 'participation', this.value)"></td>
+                <td><input value="${s.note}" onblur="updateNote(${s.student_id}, this.value)"></td>
+                <td>${getComment(s.note)}</td>
+                <td><button onclick="best(${s.student_id})">${s.best == 1 ? '🏅' : '⭐'}</button></td>
+            </tr>`;
+        });
+
+        $("#tbStudents").html(html);
+    }).fail(function(xhr){
+        console.log("Erreur loadStudents:", xhr.responseText);
+        $("#tbStudents").html("<tr><td colspan='7'>Erreur serveur.</td></tr>");
+    });
+}
+
+/* --- MISE À JOUR GÉNÉRIQUE (présence, absence, participation) --- */
+function update(student_id, field, value){
+    $.ajax({
+        url:"../../../backend/api/professor/updateStudent.php",
+        method:"POST",
+        contentType:"application/json",
+        data:JSON.stringify({
+            student_id: student_id,
+            field: field,
+            value: value,
+            course_id: $("#courseSelect").val()
+        }),
+        success:function(res){
+            console.log("Update OK:", res);
+        },
+        error:function(xhr){
+            console.log("Erreur update:", xhr.responseText);
+        }
+    });
+}
+
+/* --- MISE À JOUR DE LA NOTE + RAFRAICHIR COMMENTAIRE --- */
+function updateNote(student_id, value){
+    $.ajax({
+        url:"../../../backend/api/professor/updateStudent.php",
+        method:"POST",
+        contentType:"application/json",
+        data:JSON.stringify({
+            student_id: student_id,
+            field: "note",
+            value: value,
+            course_id: $("#courseSelect").val()
+        }),
+        success:function(res){
+            console.log("Note OK:", res);
+            loadStudents(); // recharge pour mettre à jour le commentaire
+        },
+        error:function(xhr){
+            console.log("Erreur update note:", xhr.responseText);
+        }
+    });
+}
+
+/* --- DÉFINIR BEST STUDENT --- */
+function best(student_id){
+    $.ajax({
+        url:"../../../backend/api/professor/setBestStudent.php",
+        method:"POST",
+        contentType:"application/json",
+        data:JSON.stringify({
+            student_id: student_id,
+            course_id: $("#courseSelect").val()
+        }),
+        success:function(res){
+            console.log("Best OK:", res);
+            loadStudents();
+        },
+        error:function(xhr){
+            console.log("Erreur best:", xhr.responseText);
+        }
+    });
+}
+
+/* --- POPUP AJOUT ÉLÈVE --- */
+function showAdd(){
+    $("#popup-error").text("");
+    $("#lname").val("");
+    $("#fname").val("");
+    $("#popup").show();
+}
+function hideAdd(){
+    $("#popup").hide();
+}
+
+/* --- AJOUT D'UN NOUVEL ÉLÈVE (CORRIGÉ) --- */
+function addStudent() {
+    let lname = $("#lname").val().trim();
+    let fname = $("#fname").val().trim();
+    let course_id = $("#courseSelect").val();
+
+    if (lname === "" || fname === "") {
+        $("#popup-error").text("Veuillez entrer nom et prénom.");
+        return;
+    }
+
+    // On prépare les deux formats pour être compatibles avec ton addStudent.php
+    let fullName = fname + " " + lname;
+
+    $.ajax({
+        url: "../../../backend/api/professor/addStudent.php",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            // format 1 : si ton backend attend "name"
+            name: fullName,
+            // format 2 : si ton backend attend "first_name" et "last_name"
+            first_name: fname,
+            last_name: lname,
+            course_id: course_id
+        }),
+        success: function (res) {
+            console.log("addStudent response:", res);
+            if (!res.success) {
+                $("#popup-error").text(res.message || "Erreur lors de l'ajout.");
+                return;
+            }
+            hideAdd();
+            loadStudents();
+        },
+        error: function (xhr) {
+            console.log(xhr.responseText);
+            $("#popup-error").text("Erreur serveur.");
+        }
+    });
+}
+</script>
+
+</body>
+</html>

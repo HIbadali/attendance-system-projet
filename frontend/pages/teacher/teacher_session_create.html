@@ -2,88 +2,93 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Créer session</title>
-
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-<script src="../../../js/jquery-3.6.0.min.js"></script>
+<title>Créer une session</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <style>
-body { margin:0; display:flex; background:#f4f6f9; font-family:Arial }
-.sidebar { width:260px; height:100vh; background:#1e3a8a; color:white; padding:30px 20px; }
-.sidebar div { padding:15px; border-radius:8px; cursor:pointer; margin-bottom:10px; display:flex; align-items:center; gap:12px; }
-.sidebar div:hover { background:rgba(255,255,255,0.2); }
-.content { flex:1; padding:40px; }
-.card { width:420px; background:white; padding:25px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
-input, select { width:100%; padding:12px; margin-bottom:18px; border:1px solid #ccc; border-radius:6px; }
-button { width:100%; padding:12px; background:#2563eb; color:white; border:none; border-radius:6px; cursor:pointer; }
-button:hover { background:#1e40af; }
+body{margin:0;font-family:Arial;background:#eef0f3;padding:20px;}
+.box{
+    width:460px;margin:auto;background:white;border-radius:10px;
+    padding:25px;box-shadow:0 2px 12px rgba(0,0,0,0.1);
+}
+h2{margin-top:0;}
+input,select{
+    width:100%;padding:10px;margin:8px 0;border-radius:6px;border:1px solid #ccc;
+}
+.btn{
+    padding:12px;width:100%;background:#1565c0;color:white;
+    border:none;border-radius:6px;cursor:pointer;font-size:16px;
+}
+.btn:hover{background:#0c4296;}
+.error{color:#c00;margin-top:8px;}
 </style>
 </head>
 
 <body>
 
-<div class="sidebar">
-    <h2>Professeur</h2>
-    <div onclick="window.location.href='teacher_home.html'"><span class="material-icons">home</span> Accueil</div>
-    <div onclick="window.location.href='teacher_sessions.html'"><span class="material-icons">event</span> Sessions</div>
-    <div onclick="logout()"><span class="material-icons">logout</span> Déconnexion</div>
-</div>
+<div class="box">
+    <h2>Créer une nouvelle session</h2>
 
-<div class="content">
-    <h1>Créer une session</h1>
+    <label>Cours</label>
+    <select id="course"></select>
 
-    <div class="card">
-        <label>Cours</label>
-        <select id="course"></select>
+    <label>Date</label>
+    <input type="date" id="date">
 
-        <label>Groupe</label>
-        <select id="group"></select>
+    <button class="btn" onclick="save()">Valider</button>
 
-        <label>Date</label>
-        <input type="date" id="date">
-
-        <label>Heure</label>
-        <input type="time" id="time">
-
-        <button onclick="createSession()">Créer</button>
-
-        <p id="msg"></p>
-    </div>
+    <div id="msg" class="error"></div>
 </div>
 
 <script>
-function logout(){
-    $.get("../../../backend/api/auth/logout.php", ()=> window.location.href="../login.html");
-}
+// Charger la liste des cours du professeur
+$.get("../../../backend/api/professor/getMyCourses.php", function(res){
+    if(!res.success){
+        $("#msg").text("Impossible de charger les cours.");
+        return;
+    }
+    if(res.data.length === 0){
+        $("#course").append(`<option value="">Aucun cours trouvé</option>`);
+        return;
+    }
+    res.data.forEach(c=>{
+        $("#course").append(`<option value="${c.id}">${c.code} — ${c.title}</option>`);
+    });
+});
 
-function loadCourses(){
-    $.get("../../../backend/api/professor/getMyCourses.php", res=>{
-        res.data.forEach(c=> $("#course").append(`<option value="${c.id}">${c.name}</option>`));
+function save(){
+    const course_id = $("#course").val();
+    const date      = $("#date").val();
+
+    if(!course_id || !date){
+        $("#msg").text("Veuillez choisir un cours et une date.");
+        return;
+    }
+
+    $("#msg").text("");
+
+    $.ajax({
+        url: "../../../backend/api/professor/addSession.php",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({
+            course_id: course_id,
+            date: date
+        }),
+        success: function(res){
+            if(!res.success){
+                $("#msg").text(res.message || "Erreur lors de la création.");
+                return;
+            }
+            alert("Session créée avec succès !");
+            window.location.href = "teacher_sessions.html";
+        },
+        error: function(xhr){
+            console.log(xhr.responseText);
+            $("#msg").text("Erreur serveur.");
+        }
     });
 }
-
-function loadGroups(){
-    $.get("../../../backend/api/professor/getMyGroups.php", res=>{
-        res.data.forEach(g=> $("#group").append(`<option value="${g.id}">${g.group_name}</option>`));
-    });
-}
-
-function createSession(){
-    $.post("../../../backend/api/professor/createSession.php", {
-        course_id: $("#course").val(),
-        group_id: $("#group").val(),
-        date: $("#date").val(),
-        time: $("#time").val()
-    }, res=>{
-        if(!res.success) return $("#msg").text(res.message);
-
-        $("#msg").css("color","green").text("Session créée !");
-        setTimeout(()=>window.location.href="teacher_sessions.html",1000);
-    });
-}
-
-loadCourses();
-loadGroups();
 </script>
 
 </body>

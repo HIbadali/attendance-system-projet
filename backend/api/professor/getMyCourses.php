@@ -1,26 +1,27 @@
 <?php
 header("Content-Type: application/json");
+require_once __DIR__ . "/../../config/database.php";
 session_start();
 
-require_once __DIR__ . "/../../config/database.php";
-require_once __DIR__ . "/../../config/response.php";
-
-if (!isset($_SESSION["user_id"]) || $_SESSION["role_id"] != 2) {
-    Response::error("Accès refusé.");
+if (!isset($_SESSION["user_id"])) {
+    echo json_encode(["success" => false, "message" => "Not logged in"]);
+    exit;
 }
 
-$professor_id = $_SESSION["user_id"];
+$user_id = $_SESSION["user_id"];
 
 $db = new Database();
 $conn = $db->connect();
 
-$query = $conn->prepare("
-    SELECT id, title, code
-    FROM courses
-    WHERE professor_id = :pid
-");
-$query->execute([":pid" => $professor_id]);
+$sql = "SELECT id, code, title 
+        FROM courses 
+        WHERE professor_id = :pid
+        ORDER BY code";
 
-$courses = $query->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $conn->prepare($sql);
+$stmt->execute([":pid" => $user_id]);
 
-Response::success($courses, "Cours récupérés.");
+echo json_encode([
+    "success" => true,
+    "data" => $stmt->fetchAll(PDO::FETCH_ASSOC)
+]);

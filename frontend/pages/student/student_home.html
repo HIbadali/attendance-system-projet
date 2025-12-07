@@ -2,122 +2,82 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Accueil Étudiant</title>
-
+    <title>Dashboard Étudiant</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            display: flex;
-            background: #f4f6f9;
-        }
-
-        .sidebar {
-            width: 260px;
-            height: 100vh;
-            background: #1565c0;
-            color: white;
-            padding: 25px;
-        }
-
-        .sidebar h2 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .menu-item {
-            padding: 12px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-size: 18px;
-        }
-
-        .menu-item:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
-        .content {
-            flex-grow: 1;
-            padding: 40px;
-        }
-
-        h1 {
-            margin-top: 0;
-            font-size: 32px;
-        }
-
-        .course {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            cursor: pointer;
-        }
-
-        .course:hover {
-            background: #e9f0fb;
-        }
+        body{margin:0;display:flex;font-family:Arial;background:#f4f6f9;}
+        .sidebar{width:260px;background:#6a0dad;height:100vh;color:white;padding:25px;}
+        .sidebar h2{margin:0 0 20px;}
+        .menu-item{padding:12px;border-radius:8px;margin-bottom:10px;cursor:pointer;}
+        .menu-item:hover{background:rgba(255,255,255,0.25);}
+        .content{padding:40px;width:100%;}
+        .card{background:white;border-radius:10px;padding:18px;margin-bottom:15px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+        .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#ffd54f;color:#5d4037;font-size:12px;font-weight:bold;margin-left:8px;}
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <h2>Étudiant</h2>
-
-    <div class="menu-item" id="btn-home">🏠 Accueil</div>
-    <div class="menu-item" id="btn-logout">🚪 Déconnexion</div>
+    <div class="menu-item" onclick="go('student_home.html')">🏠 Dashboard</div>
+    <div class="menu-item" onclick="go('student_courses.html')">📘 Mes cours</div>
+    <div class="menu-item" onclick="go('student_stats.html')">📊 Statistiques</div>
+    <div class="menu-item" onclick="go('student_schedule.html')">📅 Emploi du temps</div>
+    <div class="menu-item" onclick="logout()">🚪 Déconnexion</div>
 </div>
 
 <div class="content">
-    <h1>Mes cours</h1>
 
-    <div id="course-list">Chargement...</div>
+    <h1>Dashboard</h1>
+
+    <div class="card">
+        <h3>Résumé</h3>
+        <p><b>Moyenne générale :</b> <span id="avg">0</span> / 20</p>
+        <p><b>Présence totale :</b> <span id="presence">0</span></p>
+        <p><b>Absences totales :</b> <span id="absence">0</span></p>
+        <p><b>Participations :</b> <span id="part">0</span></p>
+    </div>
+
+    <div class="card">
+        <h3>Mes cours (avec Best Student)</h3>
+        <div id="courseList">Chargement...</div>
+    </div>
 </div>
 
 <script>
-const API = "../../../backend/api";
+function go(p){ window.location.href = p; }
 
-// Déconnexion
-$("#btn-logout").click(function(){
-    $.get(`${API}/auth/logout.php`, function(){
+function logout(){
+    $.get("../../../backend/api/auth/logout.php", ()=> {
         window.location.href = "../../login.html";
     });
+}
+
+// Charger stats globales
+$.get("../../../backend/api/student/getMyStats.php", function(res){
+    if(!res.success){ console.log(res); return; }
+    const s = res.data;
+    $("#avg").text(s.avg_note ?? 0);
+    $("#presence").text(s.total_presence ?? 0);
+    $("#absence").text(s.total_absence ?? 0);
+    $("#part").text(s.total_participation ?? 0);
 });
 
-// Charger les cours
-$.get(`${API}/students/getMyCourses.php`, function(res){
-    if(!res.success){
-        $("#course-list").html("Erreur : " + res.message);
-        return;
-    }
-
-    if(res.data.length === 0){
-        $("#course-list").html("Aucun cours trouvé.");
-        return;
-    }
+// Charger liste de cours + best
+$.get("../../../backend/api/student/getMyCourses.php", function(res){
+    if(!res.success){ $("#courseList").text("Erreur : "+res.message); return; }
+    if(res.data.length === 0){ $("#courseList").text("Aucun cours."); return; }
 
     let html = "";
-    res.data.forEach(c => {
-        html += `
-            <div class="course" onclick="openCourse(${c.id})">
-                <b>${c.title}</b><br>
-                Code : ${c.code}
-            </div>
-        `;
+    res.data.forEach(c=>{
+        html += `<p>
+            <b>${c.code}</b> — ${c.title}
+            ${c.best == 1 ? '<span class="badge">🏅 Best student</span>' : ''}
+            <br>Note : ${c.note ?? 0}/20
+        </p>`;
     });
-
-    $("#course-list").html(html);
+    $("#courseList").html(html);
 });
-
-// Redirection vers les sessions d’un cours
-function openCourse(id){
-    window.location.href = `student_course_sessions.html?course_id=${id}`;
-}
 </script>
 
 </body>

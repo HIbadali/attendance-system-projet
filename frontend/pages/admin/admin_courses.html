@@ -1,478 +1,147 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Gestion des cours — Admin</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Créer un cours - Admin</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: #f3f4f6;
-            color: #111827;
-        }
-
-        .layout { display: flex; min-height: 100vh; }
-
-        /* SIDEBAR */
-        .sidebar {
-            width: 250px;
-            background: #111827;
-            color: #e5e7eb;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
-
-        .brand { font-size: 20px; font-weight: bold; margin-bottom: 30px; }
-        .brand span { color: #3b82f6; }
-
-        .menu { flex: 1; }
-        .menu-item {
-            padding: 10px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-        .menu-item a {
-            color: inherit;
-            text-decoration: none;
-            display: block;
-        }
-        .menu-item.active,
-        .menu-item:hover { background: #1f2937; }
-
-        .sidebar-footer {
-            font-size: 12px;
-            color: #9ca3af;
-        }
-
-        /* MAIN */
-        .main {
-            flex: 1;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .topbar-title {
-            font-size: 22px;
-            font-weight: bold;
-        }
-
-        /* ACTION BAR */
-        .actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            align-items: center;
-        }
-
-        .search-input {
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: 1px solid #d1d5db;
-            width: 260px;
-        }
-
-        .btn-primary {
-            background: #2563eb;
-            color: white;
-            padding: 10px 14px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-        }
-
-        .btn-primary span { margin-left: 6px; }
-
-        /* TABLE */
-        table {
-            width: 100%;
-            margin-top: 16px;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.06);
-        }
-
-        th, td {
-            padding: 12px;
-            font-size: 14px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        th {
-            background: #f9fafb;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        tr:hover { background: #f3f4f6; }
-
-        .actions-btns button {
-            border: none;
-            background: none;
-            cursor: pointer;
-        }
-
-        .edit { color: #2563eb; }
-        .delete { color: #dc2626; }
-        .material-icons { font-size: 20px; vertical-align: middle; }
-
-        /* MODAL */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal {
-            background: white;
-            width: 480px;
-            max-width: 95%;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            animation: fadeIn .3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .modal h2 { margin-bottom: 18px; font-size: 18px; }
-
-        .form-group { margin-bottom: 12px; }
-        .form-group label {
-            display: block; margin-bottom: 6px;
-            font-size: 14px; color: #374151;
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .form-group small { font-size: 12px; color: #9ca3af; }
-
-        .modal-footer {
-            display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;
-        }
-
-        .btn-cancel {
-            background: #e5e7eb; padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer;
-        }
-        .btn-save {
-            background: #2563eb; color: white;
-            padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer;
-        }
-
-        .multiselect {
-            height: 110px;
-        }
-
-    </style>
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#eef1f5;
+    display:flex;
+}
+.sidebar{
+    width:260px;
+    background:#1565c0;
+    height:100vh;
+    padding:25px;
+    color:white;
+}
+.sidebar h2{margin-top:0;}
+.menu-item{
+    padding:12px;
+    border-radius:6px;
+    cursor:pointer;
+    margin-top:10px;
+}
+.menu-item:hover{background:rgba(255,255,255,0.2);}
+.content{
+    width:100%;
+    padding:40px;
+}
+.box{
+    width:450px;
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 2px 12px rgba(0,0,0,0.15);
+}
+input, select{
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+.btn{
+    background:#1565c0;
+    padding:12px;
+    width:100%;
+    border:none;
+    color:white;
+    font-size:16px;
+    border-radius:6px;
+    cursor:pointer;
+}
+.btn:hover{background:#0b3a8c;}
+</style>
 </head>
 
 <body>
 
-<div class="layout">
+<div class="sidebar">
+    <h2>Admin</h2>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-        <div class="brand">Attendance<span>Admin</span></div>
-
-        <div class="menu">
-            <div class="menu-item"><a href="admin_home.html">Dashboard</a></div>
-            <div class="menu-item"><a href="admin_students.html">Étudiants</a></div>
-            <div class="menu-item"><a href="admin_professors.html">Professeurs</a></div>
-            <div class="menu-item active"><a href="admin_courses.html">Cours</a></div>
-            <div class="menu-item"><a href="admin_groups.html">Groupes</a></div>
-        </div>
-
-        <div class="sidebar-footer">INF101 — Système de présence</div>
-    </div>
-
-    <!-- MAIN -->
-    <div class="main">
-
-        <div class="topbar">
-            <div class="topbar-title">Gestion des cours</div>
-        </div>
-
-        <div class="actions">
-            <input type="text" class="search-input" id="search" placeholder="Rechercher un cours...">
-
-            <button class="btn-primary" id="btnAdd">
-                <span class="material-icons">add</span>
-                <span>Nouveau cours</span>
-            </button>
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Cours</th>
-                    <th>Code</th>
-                    <th>Professeur</th>
-                    <th>Groupes</th>
-                    <th style="width: 100px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="coursesTable"></tbody>
-        </table>
-
-    </div>
+<div class="menu-item" onclick="go('admin_home.html')">🏠 Dashboard</div>
+<div class="menu-item" onclick="go('admin_courses.html')">📘 Gestion Cours</div>
+    <div class="menu-item" onclick="go('../login.html')">🚪 Déconnexion</div>
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-        <h2 id="modalTitle">Ajouter un cours</h2>
+<div class="content">
+    <div class="box">
+        <h2>Créer un cours</h2>
 
-        <div class="form-group">
-            <label>Nom du cours</label>
-            <input type="text" id="courseName">
-        </div>
+        <label>Code du cours</label>
+        <input type="text" id="course_code" placeholder="ex: INF101">
 
-        <div class="form-group">
-            <label>Code du cours</label>
-            <input type="text" id="courseCode" placeholder="Ex: INF101">
-        </div>
+        <label>Nom du cours</label>
+        <input type="text" id="course_title" placeholder="ex: Algorithmique">
 
-        <div class="form-group">
-            <label>Professeur</label>
-            <select id="professorSelect">
-                <option value="">-- Sélectionner un professeur --</option>
-            </select>
-        </div>
+        <label>Professeur responsable</label>
+        <select id="prof_select"></select>
 
-        <div class="form-group">
-            <label>Groupes assignés</label>
-            <select id="groupsSelect" multiple class="multiselect"></select>
-            <small>Maintenez CTRL (ou CMD sur Mac) pour sélectionner plusieurs groupes.</small>
-        </div>
+        <br><br>
+        <button class="btn" onclick="save()">Enregistrer</button>
 
-        <div class="modal-footer">
-            <button class="btn-cancel" id="btnCancel">Annuler</button>
-            <button class="btn-save" id="btnSave">Enregistrer</button>
-        </div>
+        <p id="msg" style="color:red;margin-top:10px;"></p>
     </div>
 </div>
 
 <script>
-let editingId = null;
-let allProfessors = [];
-let allGroups = [];
+function go(p){window.location.href=p;}
 
-// Charger profs + groupes pour le formulaire
-function loadFormData() {
-    $.get("../../../backend/api/admin/getCourseFormData.php", function(res) {
-        if (!res.success) return;
-
-        allProfessors = res.data.professors;
-        allGroups     = res.data.groups;
-
-        let profOptions = '<option value="">-- Sélectionner un professeur --</option>';
-        allProfessors.forEach(p => {
-            profOptions += `<option value="${p.id}">${p.first_name} ${p.last_name}</option>`;
-        });
-        $("#professorSelect").html(profOptions);
-
-        let groupOptions = "";
-        allGroups.forEach(g => {
-            groupOptions += `<option value="${g.id}">${g.group_name}</option>`;
-        });
-        $("#groupsSelect").html(groupOptions);
-    });
-}
-
-// Charger les cours dans le tableau
-function loadCourses() {
-    $.get("../../../backend/api/admin/getCourses.php", function(res) {
-        if (!res.success) return;
-
-        let html = "";
-
-        res.data.forEach(c => {
-            html += `
-            <tr>
-                <td>${c.id}</td>
-                <td>${c.name}</td>
-                <td>${c.code}</td>
-                <td>${c.professor_name ?? "-"}</td>
-                <td>${c.groups_label ?? "-"}</td>
-                <td class="actions-btns">
-                    <button onclick="editCourse(${c.id})">
-                        <span class="material-icons edit">edit</span>
-                    </button>
-                    <button onclick="deleteCourse(${c.id})">
-                        <span class="material-icons delete">delete</span>
-                    </button>
-                </td>
-            </tr>`;
-        });
-
-        $("#coursesTable").html(html);
-    });
-}
-
-// MODAL
-function openModal(title) {
-    $("#modalTitle").text(title);
-    $("#modalOverlay").fadeIn(150);
-}
-
-function closeModal() {
-    $("#modalOverlay").fadeOut(150);
-}
-
-$("#btnAdd").click(() => {
-    editingId = null;
-    $("#courseName").val("");
-    $("#courseCode").val("");
-    $("#professorSelect").val("");
-    $("#groupsSelect option").prop("selected", false);
-
-    openModal("Ajouter un cours");
-});
-
-$("#btnCancel").click(closeModal);
-
-// EDIT : charger un cours par ID
-function editCourse(id) {
-    editingId = id;
-
-    $.get("../../../backend/api/admin/getCourse.php?id=" + id, function(res) {
-        if (!res.success) {
-            alert(res.message);
-            return;
-        }
-
-        const c = res.data.course;
-        const groupIds = res.data.group_ids;
-
-        $("#courseName").val(c.name);
-        $("#courseCode").val(c.code);
-        $("#professorSelect").val(c.professor_id);
-
-        $("#groupsSelect option").each(function() {
-            const val = $(this).val();
-            $(this).prop("selected", groupIds.includes(parseInt(val)));
-        });
-
-        openModal("Modifier le cours");
-    });
-}
-
-// Récupérer les groupes sélectionnés
-function getSelectedGroupIds() {
-    const ids = [];
-    $("#groupsSelect option:selected").each(function() {
-        ids.push(parseInt($(this).val()));
-    });
-    return ids;
-}
-
-// SAVE (ajouter / modifier)
-$("#btnSave").click(() => {
-    const name = $("#courseName").val().trim();
-    const code = $("#courseCode").val().trim();
-    const professor_id = $("#professorSelect").val();
-    const group_ids = getSelectedGroupIds();
-
-    if (name === "" || code === "" || !professor_id) {
-        alert("Nom, code et professeur sont obligatoires.");
+// --- LOAD PROFESSEURS ---
+$.get("../../../backend/api/admin/getProfessors.php", function(res){
+    if(!res.success){
+        $("#prof_select").append(`<option value="">Aucun professeur trouvé</option>`);
         return;
     }
 
-    const payload = {
-        id: editingId,
-        name: name,
-        code: code,
-        professor_id: parseInt(professor_id),
-        group_ids: group_ids
-    };
-
-    const url = editingId
-        ? "../../../backend/api/admin/editCourse.php"
-        : "../../../backend/api/admin/addCourse.php";
-
-    $.ajax({
-        url: url,
-        method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function(res) {
-            if (!res.success) {
-                alert(res.message);
-                return;
-            }
-            closeModal();
-            loadCourses();
-        }
+    res.data.forEach(p=>{
+        $("#prof_select").append(`
+            <option value="${p.id}">${p.last_name} ${p.first_name}</option>
+        `);
     });
 });
 
-// DELETE
-function deleteCourse(id) {
-    if (!confirm("Supprimer ce cours ?")) return;
+// --- SAVE ---
+function save(){
+    let code = $("#course_code").val().trim();
+    let title = $("#course_title").val().trim();
+    let prof  = $("#prof_select").val().trim();
+
+    if(code === "" || title === "" || prof === ""){
+        $("#msg").text("Veuillez remplir tous les champs.");
+        return;
+    }
+
+    $("#msg").text("");
 
     $.ajax({
-        url: "../../../backend/api/admin/deleteCourse.php",
+        url: "../../../backend/api/admin/addCourse.php",
         method: "POST",
         contentType: "application/json",
-        data: JSON.stringify({ id }),
-        success: function(res) {
-            if (!res.success) {
-                alert(res.message);
-                return;
+        data: JSON.stringify({
+            code: code,
+            title: title,
+            professor_id: prof
+        }),
+        success: function(res){
+            if(res.success){
+                alert("Cours créé !");
+                window.location.href = "admin_courses.html";
+            } else {
+                $("#msg").text("Erreur : " + res.message);
             }
-            loadCourses();
+        },
+        error: function(xhr){
+            $("#msg").text("Erreur serveur.");
+            console.log(xhr.responseText);
         }
     });
 }
-
-// SEARCH
-$("#search").on("input", function() {
-    const q = $(this).val().toLowerCase();
-
-    $("#coursesTable tr").each(function() {
-        const text = $(this).text().toLowerCase();
-        $(this).toggle(text.indexOf(q) > -1);
-    });
-});
-
-$(document).ready(function() {
-    loadFormData();
-    loadCourses();
-});
 </script>
 
 </body>

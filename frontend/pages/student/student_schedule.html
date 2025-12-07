@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Emploi du temps</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body{margin:0;display:flex;font-family:Arial;background:#f4f6f9;}
+        .sidebar{width:260px;background:#6a0dad;height:100vh;color:white;padding:25px;}
+        .sidebar h2{margin-bottom:20px;}
+        .menu-item{padding:12px;border-radius:8px;cursor:pointer;margin-bottom:10px;}
+        .menu-item:hover{background:rgba(255,255,255,0.25);}
+        .content{padding:40px;width:100%;}
+        table{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;}
+        th,td{padding:12px;border-bottom:1px solid #eee;text-align:center;}
+        th{background:#6a0dad;color:white;}
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>Étudiant</h2>
+    <div class="menu-item" onclick="go('student_home.html')">🏠 Dashboard</div>
+    <div class="menu-item" onclick="go('student_courses.html')">📘 Mes cours</div>
+    <div class="menu-item" onclick="go('student_stats.html')">📊 Statistiques</div>
+    <div class="menu-item" onclick="go('student_schedule.html')">📅 Emploi du temps</div>
+    <div class="menu-item" onclick="logout()">🚪 Déconnexion</div>
+</div>
+
+<div class="content">
+    <h1>Emploi du temps</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Jour</th>
+                <th>Heure</th>
+                <th>Cours</th>
+            </tr>
+        </thead>
+        <tbody id="tbSchedule"></tbody>
+    </table>
+</div>
+
+<script>
+function go(p){window.location.href=p;}
+function logout(){ $.get("../../../backend/api/auth/logout.php",()=>{window.location.href="../../login.html";}); }
+
+const days = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"];
+
+$.get("../../../backend/api/student/getMyCourses.php", function(res){
+    if(!res.success){
+        $("#tbSchedule").html("<tr><td colspan='3'>Erreur : "+res.message+"</td></tr>");
+        return;
+    }
+    if(res.data.length === 0){
+        $("#tbSchedule").html("<tr><td colspan='3'>Aucun cours.</td></tr>");
+        return;
+    }
+
+    let html = "";
+    res.data.forEach((c, index)=>{
+        let day = days[index % days.length];
+        let startHour = 8 + (index % 4) * 2; // 8,10,12,14
+        let endHour = startHour + 2;
+
+        html += `
+            <tr>
+                <td>${day}</td>
+                <td>${startHour}h - ${endHour}h</td>
+                <td>${c.title} (${c.code}) ${c.best==1 ? "🏅" : ""}</td>
+            </tr>`;
+    });
+
+    $("#tbSchedule").html(html);
+});
+</script>
+
+</body>
+</html>

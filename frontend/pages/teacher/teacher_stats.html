@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Statistiques Étudiants</title>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body { margin:0; font-family:Arial; display:flex; background:#f3f5f9; }
+
+.sidebar {
+    width:260px; background:#1565c0; height:100vh;
+    color:white; padding:25px;
+}
+.sidebar h2 { margin-bottom:20px; }
+.menu-item {
+    padding:12px; cursor:pointer; margin-bottom:10px;
+    border-radius:6px;
+}
+.menu-item:hover { background:rgba(255,255,255,0.25); }
+
+.content {
+    width:100%; padding:40px;
+}
+
+.course-select {
+    padding:8px; border-radius:6px;
+    border:1px solid #bbb; font-size:16px;
+    margin-bottom:20px;
+}
+
+.stat-box {
+    background:white; padding:20px; 
+    margin-bottom:20px; border-radius:8px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.best-student {
+    background:#ffe8a8;
+    border-left:6px solid gold;
+    padding:15px; border-radius:6px;
+    font-size:18px;
+}
+</style>
+
+</head>
+<body>
+
+<!-- 🔵 SIDEBAR -->
+<div class="sidebar">
+    <h2>Professeur</h2>
+    <div class="menu-item" onclick="go('teacher_home.html')">🏠 Dashboard</div>
+    <div class="menu-item" onclick="go('teacher_sessions.html')">📅 Sessions</div>
+    <div class="menu-item" onclick="go('teacher_students.html')">👨‍🎓 Étudiants</div>
+    <div class="menu-item" onclick="go('teacher_stats.html')">📊 Statistiques</div>
+    <div class="menu-item" onclick="window.location.href='../login.html'">🚪 Déconnexion</div>
+</div>
+
+<!-- PAGE CONTENT -->
+<div class="content">
+
+    <h1>📊 Statistiques par cours</h1>
+
+    <select id="courseSelect" class="course-select"></select>
+
+    <!-- BEST STUDENT -->
+    <div class="stat-box" id="best-box">
+        <h3>⭐ Meilleur Élève</h3>
+        <div id="best-student" class="best-student">Chargement...</div>
+    </div>
+
+    <!-- CHART PRESENCE -->
+    <div class="stat-box">
+        <h3>Taux de présence</h3>
+        <canvas id="chartPresence"></canvas>
+    </div>
+
+    <!-- CHART NOTES -->
+    <div class="stat-box">
+        <h3>Moyennes des notes</h3>
+        <canvas id="chartNotes"></canvas>
+    </div>
+
+</div>
+
+<script>
+function go(p){ window.location.href = p; }
+
+/* LOAD COURSES */
+$.get("../../../backend/api/professor/getMyCourses.php", function(res) {
+    if(res.success){
+        res.data.forEach(c=>{
+            $("#courseSelect").append(`<option value="${c.id}">${c.title}</option>`);
+        });
+        loadStats();
+    }
+});
+
+$("#courseSelect").change(loadStats);
+
+
+/* LOAD STATISTICS */
+function loadStats(){
+    let cid = $("#courseSelect").val();
+
+    $.get("../../../backend/api/professor/getStudentsByCourse.php?course_id=" + cid, function(res){
+
+        // BEST STUDENT
+        let best = res.data.find(s => s.best == 1);
+        if(best){
+            $("#best-student").text(best.last_name+" "+best.first_name+" 🏅");
+        } else {
+            $("#best-student").text("Aucun meilleur élève défini");
+        }
+
+        let names = [];
+        let pres = [];
+        let notes = [];
+
+        res.data.forEach(s=>{
+            names.push(s.last_name);
+            pres.push(s.presence);
+            notes.push(s.note);
+        });
+
+        showPresence(names, pres);
+        showNotes(names, notes);
+    });
+}
+
+
+/* PRESENCE CHART */
+function showPresence(labels, values){
+    new Chart(document.getElementById("chartPresence"), {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets:[{
+                label:"Présence",
+                data: values,
+                backgroundColor:"#1565c0"
+            }]
+        }
+    });
+}
+
+/* NOTES CHART */
+function showNotes(labels, values){
+    new Chart(document.getElementById("chartNotes"), {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets:[{
+                label:"Notes",
+                data: values,
+                borderColor:"#ff8c42",
+                backgroundColor:"#ffcc9c"
+            }]
+        }
+    });
+}
+</script>
+
+</body>
+</html>
